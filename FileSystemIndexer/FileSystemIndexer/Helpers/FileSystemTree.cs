@@ -29,7 +29,44 @@ namespace FileSystemIndexer.Helpers
 
         public IEnumerable<string> GetFilesBySubString(string subString)
         {
-            return null;
+            return GetFilesBySubstringInternal(Root, subString);
+        }
+
+        private IEnumerable<string> GetFilesBySubstringInternal(FileSystemNode node, string subString)
+        {
+            if (node.Value.Contains(subString, StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var el in GetAllFileFromNode(node))
+                {
+                    yield return GetFullPath(el);
+                }
+            }
+
+            foreach (var child in node.Children)
+            {
+                foreach (var el in GetFilesBySubstringInternal(child, subString))
+                {
+                    yield return el;
+                }
+            }
+        }
+
+        private IEnumerable<FileSystemNode> GetAllFileFromNode(FileSystemNode node)
+        {
+            if (node.Children.Count == 0)
+            {
+                yield return node;
+            }
+            else
+            {
+                foreach (var child in node.Children)
+                {
+                    foreach (var childResult in GetAllFileFromNode(child))
+                    {
+                        yield return childResult;
+                    }
+                }
+            }
         }
 
         private string GetFullPath(FileSystemNode node)

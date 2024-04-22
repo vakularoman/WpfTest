@@ -12,9 +12,9 @@
     <DataTemplate DataType="{x:Type viewModels:IndexingViewModel}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
+                <RowDefinition Height="*" MinHeight="100" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="*" MinHeight="100" />
             </Grid.RowDefinitions>
 
             <ListView Grid.Row="0"
@@ -54,21 +54,21 @@
                             Orientation="Horizontal">
                     <TextBlock Text="Indexed files count:" />
                     <TextBlock Text="{Binding IndexingFilesCount}"
-                               Margin="5,0"/>
+                               Margin="5,0" />
                 </StackPanel>
 
                 <WrapPanel Grid.Row="1"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Center">
-                    <Button Style="{StaticResource IndexingButtonStyle}" 
+                           VerticalAlignment="Center"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Center">
+                    <Button Style="{StaticResource IndexingButtonStyle}"
                             Content="Start"
                             Command="{Binding StartIndexingCommand, Mode=OneWay}" />
                     <Button Style="{StaticResource IndexingButtonStyle}"
                             Margin="5,0,0,0"
                             Content="Stop"
                             Command="{Binding StopIndexingCommand, Mode=OneWay}" />
-                    <Button Style="{StaticResource IndexingButtonStyle}" 
+                    <Button Style="{StaticResource IndexingButtonStyle}"
                             Margin="5,0,0,0"
                             Content="Continue"
                             Command="{Binding ContinueIndexingCommand, Mode=OneWay}" />
@@ -77,20 +77,95 @@
         </Grid>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type viewModels:ResultListViewModel}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}"
+                         VerticalContentAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Style="{StaticResource IndexingButtonStyle}"
+                        Content="Search"
+                        Command="{Binding SearchCommand, Mode=OneWay}" />
+
+            </Grid>
+
+            <ListView Grid.Row="1"
+                      ItemsSource="{Binding SearchResults}"
+                      HorizontalAlignment="Stretch">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Icon"
+                                        Width="Auto">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type models:FileModel}">
+                                    <Image Source="{Binding Icon}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Path"
+                                        Width="Auto"
+                                        DisplayMemberBinding="{Binding Path, Mode=OneWay}" />
+                        <GridViewColumn Header="Read only"
+                                        Width="Auto">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type models:FileModel}">
+                                    <CheckBox IsHitTestVisible="False" IsChecked="{Binding IsReadOnly, Mode=OneWay}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Hidden"
+                                        Width="Auto">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type models:FileModel}">
+                                    <CheckBox IsHitTestVisible="False" IsChecked="{Binding IsHidden, Mode=OneWay}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Size"
+                                        Width="Auto"
+                                        DisplayMemberBinding="{Binding Size, Mode=OneWay}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <Border Grid.Row="2" BorderThickness="1" BorderBrush="Gray" />
+
+            <WrapPanel Grid.Row="3"
+                       Margin="5,5,0,5">
+                <TextBlock Text="Search results count:" />
+                <TextBlock Text="{Binding SearchResultCount, Mode=OneWay}"
+                           Margin="5,0,0,0"/>
+            </WrapPanel>
+        </Grid>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type viewModels:MainViewModel}">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" MinWidth="300"/>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" MinWidth="300"/>
             </Grid.ColumnDefinitions>
 
-            <ContentControl Content="{Binding IndexingViewModel}" />
+            <ContentControl Grid.Column="0"
+                            Content="{Binding IndexingViewModel, Mode=OneWay}" />
             <GridSplitter Grid.Column="1"
                           Width="3"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Stretch" />
-            <Button Grid.Column="2" Background="Blue" />
+            <ContentControl Grid.Column="2"
+                            Content="{Binding ResultListViewModel, Mode=OneWay}" />
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

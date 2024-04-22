@@ -14,5 +14,5 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
-    <ContentControl Content="{Binding ViewModel}" />
+    <ContentControl Content="{Binding ViewModel, Mode=OneWay}" />
 </Window>

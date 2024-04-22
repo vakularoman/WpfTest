@@ -9,8 +9,11 @@ namespace FileSystemIndexer.ViewModels
         public MainViewModel()
         {
             IndexingViewModel = new IndexingViewModel(_fileSystemTree);
+            ResultListViewModel = new ResultListViewModel(_fileSystemTree);
         }
 
         public IndexingViewModel IndexingViewModel { get; }
+
+        public ResultListViewModel ResultListViewModel { get; }
     }
 }
