@@ -2,7 +2,7 @@
 
 namespace FileSystemIndexer.ViewModels
 {
-    public class MainViewModel : ObservableObjectBase
+    public sealed class MainViewModel : ObservableObjectBase, IDisposable
     {
         private readonly FileSystemTree _fileSystemTree = new();
 
@@ -15,5 +15,10 @@ namespace FileSystemIndexer.ViewModels
         public IndexingViewModel IndexingViewModel { get; }
 
         public ResultListViewModel ResultListViewModel { get; }
+
+        public void Dispose()
+        {
+            IndexingViewModel.Dispose();
+        }
     }
 }

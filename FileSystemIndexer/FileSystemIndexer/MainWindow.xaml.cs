@@ -17,5 +17,11 @@ namespace FileSystemIndexer
 
             InitializeComponent();
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            ViewModel.Dispose();
+        }
     }
 }

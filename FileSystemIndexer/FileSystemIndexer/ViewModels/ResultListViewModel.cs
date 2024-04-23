@@ -74,12 +74,11 @@ namespace FileSystemIndexer.ViewModels
                 return;
             }
 
-            var result = await Task.Run(() => _fileSystemTree.GetFilesBySubString(SearchString)
-                .Select(x => new FileModel(x))).ConfigureAwait(false);
+            var result = await Task.Run(() => _fileSystemTree.GetFilesBySubString(SearchString).ToList()).ConfigureAwait(false);
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                SearchResults = new ObservableCollection<FileModel>(result);
+                SearchResults = new ObservableCollection<FileModel>(result.Select(x => new FileModel(x)));
             });
 
             SearchResultCount = SearchResults.Count;

@@ -32,6 +32,11 @@ namespace FileSystemIndexer.Helpers
             return GetFilesBySubstringInternal(Root, subString);
         }
 
+        public void Clear()
+        {
+            Root.Children = [];
+        }
+
         private IEnumerable<string> GetFilesBySubstringInternal(FileSystemNode node, string subString)
         {
             if (node.Value.Contains(subString, StringComparison.OrdinalIgnoreCase))

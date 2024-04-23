@@ -7,19 +7,24 @@ using FileSystemIndexer.Models;
 
 namespace FileSystemIndexer.ViewModels
 {
-    public class IndexingViewModel : ObservableObjectBase
+    public sealed class IndexingViewModel : ObservableObjectBase, IDisposable
     {
         private int _indexingFilesCount;
         private readonly FileSystemTree _fileSystemTree;
+        private bool _isIndexingRunning;
+        private CancellationTokenSource _cancellationToken;
+        private IEnumerable<string> _currentEnumerable;
+        private List<string> _currentDrives;
+        private bool _isIndexingInProgress;
 
         public IndexingViewModel(FileSystemTree tree)
         {
             InitDrives();
 
             _fileSystemTree = tree;
-            StartIndexingCommand = new RelayCommand(StartIndexingCommandExecute, () => 3 > 2);
-            StopIndexingCommand = new AsyncRelayCommand(StopIndexingCommandExecute, () => 1 > 2);
-            ContinueIndexingCommand = new AsyncRelayCommand(ContinueIndexingCommandExecute, () => 1 > 2);
+            StartIndexingCommand = new AsyncRelayCommand(StartIndexingCommandExecuteAsync);
+            StopIndexingCommand = new AsyncRelayCommand(StopIndexingCommandExecuteAsync);
+            ContinueIndexingCommand = new AsyncRelayCommand(ContinueIndexingCommandExecuteAsync);
         }
 
         public ObservableCollection<CheckableDriveModel> DrivesCollection { get; private set; }
@@ -45,6 +50,36 @@ namespace FileSystemIndexer.ViewModels
             }
         }
 
+        public bool IsIndexingRunning
+        {
+            get => _isIndexingRunning;
+            set
+            {
+                if (value == _isIndexingRunning)
+                {
+                    return;
+                }
+
+                _isIndexingRunning = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsIndexingInProgress
+        {
+            get => _isIndexingInProgress;
+            set
+            {
+                if (value == _isIndexingInProgress)
+                {
+                    return;
+                }
+
+                _isIndexingInProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
         private void InitDrives()
         {
             var drivesInfos = DriveInfo.GetDrives();
@@ -59,36 +94,102 @@ namespace FileSystemIndexer.ViewModels
             DrivesCollection = new ObservableCollection<CheckableDriveModel>(drivesCollection);
         }
 
-        private void StartIndexingCommandExecute()
+        private async Task StartIndexingCommandExecuteAsync()
         {
-            Task.Run(GetFiles);
+            IsIndexingRunning = true;
+            IsIndexingInProgress = true;
+            IndexingFilesCount = 0;
+            _fileSystemTree.Clear();
+
+            try
+            {
+                await Task.Run(GetFiles).ConfigureAwait(false);
+                IsIndexingInProgress = false;
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+            finally
+            {
+                IsIndexingRunning = false;
+            }
         }
 
-        private Task StopIndexingCommandExecute()
+        private async Task StopIndexingCommandExecuteAsync()
         {
-            return null;
+            await _cancellationToken.CancelAsync().ConfigureAwait(false);
         }
 
-        private Task ContinueIndexingCommandExecute()
+        private async Task ContinueIndexingCommandExecuteAsync()
         {
-            return null;
+            IsIndexingRunning = true;
+
+            try
+            {
+                await Task.Run(GetFiles).ConfigureAwait(false);
+                IsIndexingInProgress = false;
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+            finally
+            {
+                IsIndexingRunning = false;
+            }
         }
 
         private void GetFiles()
         {
-            var selectedDrives = DrivesCollection.Where(x => x.IsChecked).ToList();
+            const int counterStep = 250;
 
-            if (selectedDrives.Count == 0)
+            _cancellationToken?.Dispose();
+            _cancellationToken = new CancellationTokenSource();
+            var newToken = _cancellationToken.Token;
+
+            var selectedDrives = DrivesCollection.Where(x => x.IsChecked).Select(x => x.DriveName).ToList();
+
+            if (_currentDrives is null || !_currentDrives.SequenceEqual(selectedDrives))
             {
-                return;
+                IndexingFilesCount = 0;
+
+                if (selectedDrives.Count == 0)
+                {
+                    return;
+                }
+
+                var iterationOrder = Enumerable.Empty<string>();
+
+                foreach (var selectedDrive in selectedDrives)
+                {
+                    iterationOrder = iterationOrder.Concat(FileSystemIterator.Iterate(selectedDrive));
+                }
+
+                _currentDrives = selectedDrives;
+                _currentEnumerable = iterationOrder;
             }
-            
-            var allElements = FileSystemIterator.Iterate(selectedDrives[0].DriveName);
 
-            foreach (var el in allElements)
+            var counter = IndexingFilesCount;
+
+            foreach (var el in _currentEnumerable)
             {
+                counter++;
                 _fileSystemTree.AddFile(el);
+
+                if (counter % counterStep == 0)
+                {
+                    IndexingFilesCount = counter;
+                    newToken.ThrowIfCancellationRequested();
+                }
             }
+
+            IndexingFilesCount = counter;
+        }
+
+        public void Dispose()
+        {
+            _cancellationToken?.Dispose();
         }
     }
 }

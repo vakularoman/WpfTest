@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.IO;
+﻿using System.IO;
 using System.Windows.Media;
 using FileSystemIndexer.Helpers;
 using FileSystemIndexer.ViewModels;
@@ -10,14 +9,17 @@ namespace FileSystemIndexer.Models
     {
         public FileModel(string filePath)
         {
-            var fileInfo = new FileInfo(filePath);
-            var attributes = File.GetAttributes(filePath);
-            Icon = FileIconHelper.DoSmth(filePath);
+            if (File.Exists(filePath))
+            {
+                var fileInfo = new FileInfo(filePath);
+                var attributes = File.GetAttributes(filePath);
+                Icon = FileIconHelper.ResolveIcon(filePath);
 
-            IsHidden = (attributes & FileAttributes.Hidden) != 0;
-            IsReadOnly = fileInfo.IsReadOnly;
-            Size = fileInfo.Length;
-            Path = filePath;
+                IsHidden = (attributes & FileAttributes.Hidden) != 0;
+                IsReadOnly = fileInfo.IsReadOnly;
+                Size = fileInfo.Length;
+                Path = filePath;
+            }
         }
 
         public bool IsReadOnly { get; }

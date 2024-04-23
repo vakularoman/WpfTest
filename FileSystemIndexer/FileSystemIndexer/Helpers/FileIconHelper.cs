@@ -9,14 +9,14 @@ namespace FileSystemIndexer.Helpers
 {
     public static class FileIconHelper
     {
-        private static Dictionary<string, ImageSource> _cash = new();
+        private static readonly Dictionary<string, ImageSource> _cache = new();
         private const string ExeExtension = ".exe";
 
-        public static ImageSource DoSmth(string filePath)
+        public static ImageSource ResolveIcon(string filePath)
         {
             var extension = Path.GetExtension(filePath);
 
-            if (!_cash.TryGetValue(extension, out var result))
+            if (!_cache.TryGetValue(extension, out var result))
             {
                 var icon = Icon.ExtractAssociatedIcon(filePath);
 
@@ -29,7 +29,7 @@ namespace FileSystemIndexer.Helpers
 
                 if (!extension.Equals(ExeExtension))
                 {
-                    _cash.Add(extension, result);
+                    _cache.Add(extension, result);
                 }
             }
 

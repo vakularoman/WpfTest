@@ -1,13 +1,17 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:viewModels="clr-namespace:FileSystemIndexer.ViewModels"
-                    xmlns:models="clr-namespace:FileSystemIndexer.Models">
+                    xmlns:models="clr-namespace:FileSystemIndexer.Models"
+                    xmlns:converters="clr-namespace:FileSystemIndexer.Converters">
 
     <Style x:Key="IndexingButtonStyle"
            TargetType="Button">
         <Setter Property="Width" Value="80" />
         <Setter Property="Height" Value="30" />
     </Style>
+
+    <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+    <converters:BooleanAndConverter x:Key="BooleanAndConverter" />
 
     <DataTemplate DataType="{x:Type viewModels:IndexingViewModel}">
         <Grid>
@@ -19,7 +23,8 @@
 
             <ListView Grid.Row="0"
                       ItemsSource="{Binding DrivesCollection}"
-                      HorizontalAlignment="Stretch">
+                      HorizontalAlignment="Stretch"
+                      IsEnabled="{Binding IsIndexingRunning, Converter={StaticResource InverseBooleanConverter}}">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Width="Auto">
@@ -63,15 +68,24 @@
                            HorizontalAlignment="Center">
                     <Button Style="{StaticResource IndexingButtonStyle}"
                             Content="Start"
+                            IsEnabled="{Binding IsIndexingRunning, Converter={StaticResource InverseBooleanConverter}}"
                             Command="{Binding StartIndexingCommand, Mode=OneWay}" />
                     <Button Style="{StaticResource IndexingButtonStyle}"
                             Margin="5,0,0,0"
                             Content="Stop"
+                            IsEnabled="{Binding IsIndexingRunning}"
                             Command="{Binding StopIndexingCommand, Mode=OneWay}" />
                     <Button Style="{StaticResource IndexingButtonStyle}"
                             Margin="5,0,0,0"
                             Content="Continue"
-                            Command="{Binding ContinueIndexingCommand, Mode=OneWay}" />
+                            Command="{Binding ContinueIndexingCommand, Mode=OneWay}">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                                <Binding Path="IsIndexingRunning" Converter="{StaticResource InverseBooleanConverter}" />
+                                <Binding Path="IsIndexingInProgress" />
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
                 </WrapPanel>
             </Grid>
         </Grid>
@@ -92,7 +106,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBox Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}"
-                         VerticalContentAlignment="Center"/>
+                         VerticalContentAlignment="Center" />
                 <Button Grid.Column="1"
                         Style="{StaticResource IndexingButtonStyle}"
                         Content="Search"
@@ -145,7 +159,7 @@
                        Margin="5,5,0,5">
                 <TextBlock Text="Search results count:" />
                 <TextBlock Text="{Binding SearchResultCount, Mode=OneWay}"
-                           Margin="5,0,0,0"/>
+                           Margin="5,0,0,0" />
             </WrapPanel>
         </Grid>
     </DataTemplate>
@@ -153,9 +167,9 @@
     <DataTemplate DataType="{x:Type viewModels:MainViewModel}">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="*" MinWidth="300" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="*" MinWidth="300" />
             </Grid.ColumnDefinitions>
 
             <ContentControl Grid.Column="0"
@@ -165,7 +179,8 @@
                           HorizontalAlignment="Center"
                           VerticalAlignment="Stretch" />
             <ContentControl Grid.Column="2"
-                            Content="{Binding ResultListViewModel, Mode=OneWay}" />
+                            Content="{Binding ResultListViewModel, Mode=OneWay}"
+                            IsEnabled="{Binding IndexingViewModel.IsIndexingRunning, Converter={StaticResource InverseBooleanConverter}}" />
         </Grid>
     </DataTemplate>
 </ResourceDictionary>
